@@ -4,7 +4,8 @@ Dashboard Streamlit de *data storytelling* sur les accidents corporels de la cir
 
 Après une forte baisse entre 2005 et 2013, la mortalité routière stagne autour de 3 200 tués par an en métropole. Le dashboard montre **où, quand et pour qui la route tue encore** : sur les routes de campagne, la nuit, et parmi les usagers vulnérables (cyclistes, seniors).
 
-- **Application en ligne** : *(à compléter après le déploiement)*
+- **Application en ligne** : [routes-de-france.streamlit.app](https://routes-de-france.streamlit.app/)
+- **Code source** : [github.com/Doriped/StreamlitDashboard](https://github.com/Doriped/StreamlitDashboard)
 - **Vidéo de démonstration** : *(à compléter)*
 - **Storyboard** : [STORYBOARD.md](STORYBOARD.md)
 - **Auteur** : *(Prénom NOM, groupe)* — EFREI Paris, projet individuel de Data Visualization 2026
