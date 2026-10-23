@@ -3,51 +3,44 @@ from pathlib import Path
 
 import pandas as pd
 
-# Permet d'importer le dossier utils/ quand on lance ce script depuis le dossier scripts/
-RACINE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(RACINE))
-from utils.prep import nettoyer_annee
-from utils.qualite import controler_annee
+# Lets this script import utils/ when run from the scripts/ folder
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from utils.prep import clean_year
+from utils.quality import check_year
 
-# Années à nettoyer : elles doivent avoir été téléchargées avec download_data.py.
-ANNEES = list(range(2005, 2025))  # de 2005 à 2024 (la borne de fin est exclue)
+YEARS = list(range(2005, 2025))  # must have been downloaded with download_data.py
 
-# Dossier des tables propres : <racine du projet>/data/processed
-PROCESSED_DIR = RACINE / "data" / "processed"
+PROCESSED_DIR = ROOT / "data" / "processed"
 
 
 def main():
-    liste_accidents = []
-    liste_personnes = []
-    liste_controles = []
+    all_accidents, all_people, all_checks = [], [], []
 
-    for annee in ANNEES:
-        print("nettoyage :", annee)
-        accidents, personnes = nettoyer_annee(annee)
-        liste_accidents.append(accidents)
-        liste_personnes.append(personnes)
-        liste_controles.append(controler_annee(annee, accidents, personnes))
+    for year in YEARS:
+        print("cleaning:", year)
+        accidents, people = clean_year(year)
+        all_accidents.append(accidents)
+        all_people.append(people)
+        all_checks.append(check_year(year, accidents, people))
 
-    # On empile les années les unes sous les autres dans une seule table
-    accidents = pd.concat(liste_accidents, ignore_index = True)
-    personnes = pd.concat(liste_personnes, ignore_index = True)
-    qualite = pd.DataFrame(liste_controles)  # une ligne par année
+    accidents = pd.concat(all_accidents, ignore_index = True)
+    people = pd.concat(all_people, ignore_index = True)
+    checks = pd.DataFrame(all_checks)
 
-    # Les colonnes de texte n'ont que quelques valeurs différentes (4 gravités, 9 modes, 96 départements…) :
-    # le type « category » les stocke une seule fois et remplace chaque case par un petit numéro.
-    # Le dashboard filtre alors beaucoup plus vite, et prend beaucoup moins de mémoire.
-    for table in [accidents, personnes]:
-        for colonne in table.select_dtypes(include = "str").columns:
-            table[colonne] = table[colonne].astype("category")
+    # Text columns have few distinct values: the category type uses much less memory and filters faster
+    for table in [accidents, people]:
+        for column in table.select_dtypes(include = "str").columns:
+            table[column] = table[column].astype("category")
 
     PROCESSED_DIR.mkdir(parents = True, exist_ok = True)
     accidents.to_parquet(PROCESSED_DIR / "accidents.parquet", index = False)
-    personnes.to_parquet(PROCESSED_DIR / "personnes.parquet", index = False)
-    qualite.to_parquet(PROCESSED_DIR / "qualite.parquet", index = False)
+    people.to_parquet(PROCESSED_DIR / "people.parquet", index = False)
+    checks.to_parquet(PROCESSED_DIR / "quality.parquet", index = False)
 
-    print("accidents :", len(accidents), "lignes")
-    print("personnes :", len(personnes), "lignes")
-    print("Terminé.")
+    print("accidents:", len(accidents), "rows")
+    print("people:", len(people), "rows")
+    print("Done.")
 
 
 if __name__ == "__main__":

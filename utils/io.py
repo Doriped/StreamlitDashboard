@@ -4,49 +4,42 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-# Dossier des tables propres, construites par scripts/build_dataset.py
 PROCESSED_DIR = Path(__file__).resolve().parents[1] / "data" / "processed"
+GEOJSON_PATH = Path(__file__).resolve().parents[1] / "data" / "geo" / "departments.geojson"
 
-# Contours des départements, téléchargés par scripts/download_data.py
-CONTOURS = Path(__file__).resolve().parents[1] / "data" / "geo" / "departements.geojson"
-
-# Citation des sources
 SOURCE = (
-    "Source : Bases de données annuelles des accidents corporels de la circulation routière 2005-2024 · "
-    "ONISR / Ministère de l'Intérieur · data.gouv.fr · Licence Ouverte 2.0. "
-    "Contours des départements : data.gouv.fr « Contours administratifs » · licence ODbL"
+    "Source: annual databases of road traffic injury accidents 2005-2024 "
+    "(Bases de données annuelles des accidents corporels de la circulation routière) · "
+    "ONISR / French Ministry of the Interior · data.gouv.fr · Licence Ouverte 2.0. "
+    "Department boundaries: data.gouv.fr \"Contours administratifs\" · ODbL"
 )
 
+# Only the columns used by the dashboard are loaded
+ACCIDENT_COLUMNS = ["accident_id", "year", "weekday", "hour", "dep", "zone", "area", "light", "road_type"]
+PEOPLE_COLUMNS = ["accident_id", "year", "dep", "zone", "area", "road_type", "severity", "mode", "sex", "age"]
 
-# Seules les colonnes utilisées par le dashboard sont chargées : moins de mémoire, et des filtres plus rapides
-COLONNES_ACCIDENTS = ["num_acc", "annee", "jour_semaine", "heure", "dep", "zone", "agglomeration", "lumiere", "type_route"]
-COLONNES_PERSONNES = ["num_acc", "annee", "dep", "zone", "agglomeration", "type_route", "gravite", "mode", "sexe", "age"]
-
-# Le dashboard ne montre que la France métropolitaine : l'outre-mer n'est pas chargé
-METROPOLE = [("zone", "==", "Métropole")]
-
-
-# Lit les deux grandes tables, une seule fois. @st.cache_resource garde en mémoire un seul exemplaire,
-# partagé par toutes les exécutions et tous les visiteurs. (@st.cache_data, lui, renverrait une copie
-# à chaque clic : avec des tables de cette taille, la mémoire du serveur serait vite dépassée.)
-# Ces tables ne sont jamais modifiées par le dashboard : chaque filtre crée une nouvelle table.
-@st.cache_resource(show_spinner = "Chargement des données…")
-def charger_donnees():
-    accidents = pd.read_parquet(PROCESSED_DIR / "accidents.parquet", columns = COLONNES_ACCIDENTS, filters = METROPOLE)
-    personnes = pd.read_parquet(PROCESSED_DIR / "personnes.parquet", columns = COLONNES_PERSONNES, filters = METROPOLE)
-    return accidents, personnes
+# The dashboard only covers metropolitan France
+METRO_ONLY = [("zone", "==", "Metropolitan France")]
 
 
-# Lit la petite table des contrôles qualité (une ligne par année)
+# cache_resource keeps a single shared copy; cache_data would return a new copy on every rerun,
+# which is too much memory for tables this size. The dashboard never modifies them.
+@st.cache_resource(show_spinner = "Loading data…")
+def load_data():
+    accidents = pd.read_parquet(PROCESSED_DIR / "accidents.parquet", columns = ACCIDENT_COLUMNS, filters = METRO_ONLY)
+    people = pd.read_parquet(PROCESSED_DIR / "people.parquet", columns = PEOPLE_COLUMNS, filters = METRO_ONLY)
+    return accidents, people
+
+
 @st.cache_data
-def charger_controles():
-    return pd.read_parquet(PROCESSED_DIR / "qualite.parquet")
+def load_checks():
+    return pd.read_parquet(PROCESSED_DIR / "quality.parquet")
 
 
-# Lit les contours des départements (pour la carte) et renvoie aussi le nom de chaque département
+# Returns the GeoJSON boundaries and a {code: name} dictionary
 @st.cache_data
-def charger_departements():
-    with open(CONTOURS, encoding = "utf-8") as fichier:
-        contours = json.load(fichier)
-    noms = {f["properties"]["code"]: f["properties"]["nom"] for f in contours["features"]}
-    return contours, noms
+def load_departments():
+    with open(GEOJSON_PATH, encoding = "utf-8") as file:
+        geojson = json.load(file)
+    names = {f["properties"]["code"]: f["properties"]["nom"] for f in geojson["features"]}
+    return geojson, names

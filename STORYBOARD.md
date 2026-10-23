@@ -1,68 +1,70 @@
-# Storyboard — « Routes de France : pourquoi la route ne tue pas moins depuis 10 ans »
+# Storyboard — "Roads of France: why road deaths have not fallen in 10 years"
 
-## Cadrage
+## Framing
 
 | | |
 |---|---|
-| **Public** | Décideurs locaux : élus et services des conseils départementaux, préfectures, communes. Ce sont eux qui gèrent les routes départementales et peuvent agir (aménagements, contrôles, éclairage, pistes cyclables). |
-| **Question principale** | Après une forte baisse, la mortalité routière stagne depuis 2013 : **où, quand et pour qui la route tue-t-elle encore ?** |
-| **Message à retenir** | Le danger se concentre sur **les routes de campagne, la nuit et les usagers vulnérables** (cyclistes, seniors). C'est là que les leviers d'action locaux se trouvent. |
-| **Types de récit** (consigne) | Avant / après dans le temps · Comparaison de territoires avec une carte · Classements et répartitions |
-| **Données** | Bases annuelles des accidents corporels 2005-2024 (ONISR, data.gouv.fr, Licence Ouverte). Métropole par défaut. |
-| **Indicateurs** | **Tués** (seul indicateur de gravité comparable sur 20 ans) · **Létalité** = tués pour 100 accidents (comparable entre territoires, sans données de population) |
+| **Audience** | Local decision-makers: elected officials and staff of departmental councils, prefectures, municipalities. They manage departmental roads and can act on them (road layout, enforcement, lighting, cycle lanes). |
+| **Main question** | After a sharp fall, road deaths have stalled since 2013: **where, when and among whom do people still die on the roads?** |
+| **Key message** | The danger is concentrated on **rural roads, at night and among vulnerable road users** (cyclists, older people). That is where local levers lie. |
+| **Narrative patterns** | Before/after over time · Comparing territories with a map · Rankings and distributions |
+| **Data** | Annual injury accident databases 2005-2024 (ONISR, data.gouv.fr, Licence Ouverte). Metropolitan France. |
+| **Indicators** | **Deaths** (the only severity measure comparable over 20 years) · **Lethality** = deaths per 100 crashes (comparable between territories without population data) |
 
-## Filtres de la barre latérale
+Figures below are for 2019-2024 unless stated otherwise; in the dashboard they follow the filters.
 
-Chaque filtre sert l'histoire du public visé :
+## Sidebar filters
 
-| Filtre | Pourquoi |
+Each filter serves the audience's story:
+
+| Filter | Why |
 |---|---|
-| **Période** (curseur d'années, 2005-2024) | comparer avant et après le plateau de 2013 |
-| **Département** (« France métropolitaine » par défaut) | un décideur local veut voir **son** territoire, comparé à la moyenne nationale |
-| **Mode de déplacement** (tous, voiture, deux-roues, vélo, piéton…) | se concentrer sur un type d'usager |
+| **Period** (year slider, 2005-2024) | compare before and after the 2013 plateau |
+| **Department** ("Metropolitan France" by default) | a local decision-maker wants to see **their** territory, compared with the national average |
+| **Travel mode** (all, car, motorised two-wheeler, bicycle, pedestrian...) | focus on one type of road user |
 
-## Les sections
+## Sections
 
-### 1. Accroche — « La route tue encore près de 9 personnes par jour »
-- **Constat** : 3 193 tués en 2024 en métropole. −40 % depuis 2005, mais **plus aucune baisse depuis 2013** (3 268).
-- **Visuel** : bandeau d'indicateurs (tués, accidents, létalité, évolution par rapport au début de la période), qui réagit aux filtres.
-- **Visuel** : courbe des tués 2005-2024, avec des **annotations** : « plateau depuis 2013 », « juillet 2018 : 80 km/h », « 2020 : confinements ».
-- **Contexte** : la gravité d'un accident n'a pas changé en 20 ans (≈ 6 tués pour 100 accidents) ; la baisse vient du nombre d'accidents.
+### 1. Hook — "Road crashes still kill nearly 9 people a day"
+- **Finding**: 3,193 deaths in 2024 in metropolitan France. -40% since 2005, but **no further fall since 2013** (3,268).
+- **Visual**: key figures (deaths, deaths per day, crashes, lethality, change since the start of the period), following the filters.
+- **Visual**: road deaths 2005-2024, with **annotations** ("start of the plateau", "80 km/h on secondary roads", "lockdowns") and a dashed reference line at the 2013 level.
+- **Context**: crash severity has not changed in 20 years (about 6 deaths per 100 crashes); the fall comes from fewer crashes.
 
-### 2. Où ? — « Un tiers des accidents, deux tiers des morts : le danger est à la campagne »
-- **Constats** : hors agglomération, 36 % des accidents mais **68 % des tués** ; les **routes départementales** concentrent **61 % des tués** ; un accident est **22 fois plus meurtrier dans le Jura qu'à Paris**.
-- **Visuel** : **carte de France par département**, colorée selon la létalité (ou le nombre de tués, au choix), avec le département sélectionné mis en évidence.
-- **Visuel** : barres « part des accidents » / « part des tués », en et hors agglomération, puis par type de route.
-- **Interaction** : survol d'un département → accidents, tués, létalité, comparaison avec la moyenne nationale.
+### 2. Where? — "A third of crashes, two thirds of deaths: the danger is in the countryside"
+- **Findings**: outside built-up areas, 36% of crashes but **68% of deaths**; **departmental roads** account for **61% of deaths**; a crash is **22 times deadlier in the Jura than in Paris**.
+- **Visual**: bars "share of crashes" / "share of deaths", inside and outside built-up areas, then by road type.
+- **Visual**: **map of France by department**, colored by lethality (or number of deaths), with the selected department outlined.
+- **Interaction**: hovering over a department shows its crashes, deaths and lethality; a sentence gives its rank and the national average.
 
-### 3. Quand ? — « La nuit et le week-end, chaque accident pèse plus lourd »
-- **Constats** : la nuit (22 h - 6 h) compte 13 % des accidents mais **22 % des tués** ; un accident est près de 3 fois plus grave à 4 h qu'à 8 h ; week-end : 26 % des accidents, 32 % des tués.
-- **Visuel** : **carte de chaleur heure × jour de la semaine** (létalité ou nombre d'accidents, au choix).
-- **Visuel** : barres par condition d'éclairage, avec une ligne de référence à la létalité moyenne.
+### 3. When? — "At night and at weekends, every crash takes a heavier toll"
+- **Findings**: nights (10 pm - 6 am) account for 13% of crashes but **22% of deaths**; a crash at 4 am is nearly 3 times deadlier than at 8 am; weekends: 26% of crashes, 32% of deaths.
+- **Visual**: **hour × weekday heatmap** (lethality or number of crashes).
+- **Visual**: bars by light conditions, with a reference line at the average lethality.
 
-### 4. Qui ? — « Les automobilistes ont le plus gagné ; cyclistes et seniors sont restés sur le bord de la route »
-- **Constats** : tués en voiture −50 %, à vélo **+24 %** ; 18-24 ans −57 %, 65 ans et plus −5 à −13 % ; les 65 ans et plus représentent **29 %** des tués (19 % en 2005) ; 77 % des tués sont des hommes.
-- **Visuel** : **petits multiples** — un mini-graphique par mode de déplacement, évolution 2005-2024 (base 100 en 2005).
-- **Visuel** : barres par classe d'âge, 2005 comparé à la dernière année de la période.
+### 4. Who? — "Car occupants gained the most; cyclists and older people were left behind"
+- **Findings** (2005 → 2024): car deaths -50%, cyclist deaths **+24%**; ages 18-24 -57%, 65 and over -5 to -13%; people aged 65+ make up **29%** of deaths (19% in 2005); 77% of those killed are men.
+- **Visual**: **small multiples** — one chart per travel mode, each with its own scale, to compare trends.
+- **Visual**: bars by age group, first year against last year of the period.
 
-### 5. Qualité des données et limites
-- **Visuel** : tableau des contrôles par année (doublons, cohérence entre tables, valeurs manquantes).
-- **Visuel** : part des accidents géolocalisés par année (0 % en 2009, 100 % depuis 2019).
-- **Visuel** : la rupture de 2018 sur les blessés hospitalisés.
-- **Texte** : les limites (pas de données de trafic ni de population, âge à un an près, catégories apparues en cours de période, corrélation ≠ causalité) et la validation avec les chiffres officiels de l'ONISR 2024.
+### 5. Data quality and limitations
+- **Visual**: four checks at a glance (duplicate crashes, orphan records, fixed duplicate vehicles, gap with the ONISR 2024 figure).
+- **Visual**: share of geolocated crashes per year (0% in 2009, 100% since 2019).
+- **Visual**: the 2018 break in hospitalized casualties.
+- **Text**: fixes applied, and limitations (no traffic or population data, age accurate to one year, categories added over time, correlation ≠ causation).
 
-### 6. Conclusions et pistes d'action
-- **Ce qui ressort** : le plateau se joue hors des villes, la nuit, et chez les usagers vulnérables.
-- **Pistes pour un décideur local** : cibler les routes départementales (aménagements, séparateurs, contrôles), les trajets de nuit et du week-end, les infrastructures cyclables et la sécurité des seniors.
-- **Pour aller plus loin** : croiser avec les populations INSEE (risque par habitant) et les données de trafic (risque par kilomètre), évaluer localement les mesures (80 km/h, 30 km/h en ville).
+### 6. Conclusions and possible actions
+- **Key findings**: the plateau is played out outside towns, at night and among vulnerable road users (figures follow the filters).
+- **Actions for local decision-makers**: target departmental roads (layout, separation, enforcement), night and weekend trips, cycling infrastructure and older people's safety.
+- **Going further**: relate to INSEE population (risk per inhabitant) and traffic data (risk per kilometre), evaluate local measures (80 km/h, 30 km/h in towns).
 
-## Correspondance avec les exigences de la consigne
+## Mapping to the assignment requirements
 
-| Exigence | Où |
+| Requirement | Where |
 |---|---|
-| Filtres dans la barre latérale | période, département, mode |
-| Au moins 3 graphiques interactifs avec survol | courbe, carte, carte de chaleur, barres, petits multiples |
-| Au moins une carte | carte des départements (section 2) |
-| Indicateurs liés aux filtres | bandeau de la section 1 |
-| Section qualité des données | section 5 |
-| Accroche, contexte, constats, conséquences | sections 1, 1, 2-4, 6 |
+| Sidebar filters | period, department, travel mode |
+| At least 3 interactive charts with hover | line, bars, map, heatmap, small multiples |
+| At least one map | department map (section 2) |
+| Key figures tied to filters | section 1 |
+| Data quality section | section 5 |
+| Hook, context, key insights, implications | sections 1, 1, 2-4, 6 |

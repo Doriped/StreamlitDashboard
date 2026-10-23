@@ -1,74 +1,70 @@
 import streamlit as st
 
-from utils.viz import nombre
+from utils.viz import fmt
 
-HEURES_DE_NUIT = [22, 23, 0, 1, 2, 3, 4, 5]
-USAGERS_VULNERABLES = ["Piéton", "Vélo", "Trottinette / EDP", "Deux-roues motorisé"]
+NIGHT_HOURS = [22, 23, 0, 1, 2, 3, 4, 5]
+VULNERABLE_USERS = ["Pedestrian", "Bicycle", "E-scooter / PMD", "Motorised two-wheeler"]
 
 
-def afficher(accidents, personnes, territoire, periode):
-    st.header("6. Conclusions et pistes d'action")
-    tues = personnes[personnes["gravite"] == "Tué"]
-    if len(tues) == 0:
-        st.warning("Aucun tué ne correspond aux filtres choisis.")
+def show(accidents, people, territory, period):
+    st.header("6. Conclusions and possible actions")
+    killed = people[people["severity"] == "Killed"]
+    if len(killed) == 0:
+        st.warning("No deaths match the selected filters.")
         return
 
-    # Les chiffres clés de la sélection actuelle
-    debut, fin = periode
-    heures = accidents[["num_acc", "heure"]]
-    tues_nuit = tues.merge(heures, on = "num_acc")["heure"].isin(HEURES_DE_NUIT).mean() * 100
-    accidents_nuit = accidents["heure"].isin(HEURES_DE_NUIT).mean() * 100
-    hors_agglomeration = (tues["agglomeration"] == "Hors agglomération").mean() * 100
-    departementales = (tues["type_route"] == "Route départementale").mean() * 100
-    vulnerables = {annee: tues.loc[tues["annee"] == annee, "mode"].isin(USAGERS_VULNERABLES).mean() * 100 for annee in [debut, fin]}
+    start, end = period
+    hours = accidents[["accident_id", "hour"]]
+    night_deaths = killed.merge(hours, on = "accident_id")["hour"].isin(NIGHT_HOURS).mean() * 100
+    night_crashes = accidents["hour"].isin(NIGHT_HOURS).mean() * 100
+    outside_towns = (killed["area"] == "Outside built-up area").mean() * 100
+    departmental = (killed["road_type"] == "Departmental road").mean() * 100
+    vulnerable = {year: killed.loc[killed["year"] == year, "mode"].isin(VULNERABLE_USERS).mean() * 100 for year in [start, end]}
 
-    st.markdown(f"**Ce qui ressort** ({territoire}, {debut}-{fin}) :")
-    colonne1, colonne2, colonne3 = st.columns(3)
-    with colonne1.container(border = True):
+    st.markdown(f"**Key findings** ({territory}, {start}-{end}):")
+    col1, col2, col3 = st.columns(3)
+    with col1.container(border = True):
         st.markdown(
-            f"**1. Le danger est hors des villes.**\n\n"
-            f"{nombre(hors_agglomeration)} % des tués meurent hors agglomération, "
-            f"et {nombre(departementales)} % sur les routes départementales."
+            f"**1. The danger is outside towns.**\n\n"
+            f"{fmt(outside_towns)}% of deaths happen outside built-up areas, and {fmt(departmental)}% on departmental roads."
         )
-    with colonne2.container(border = True):
+    with col2.container(border = True):
         st.markdown(
-            f"**2. La nuit pèse lourd.**\n\n"
-            f"{nombre(tues_nuit)} % des tués meurent entre 22 h et 6 h, "
-            f"alors que seulement {nombre(accidents_nuit)} % des accidents ont lieu à ces heures-là."
+            f"**2. Nights weigh heavily.**\n\n"
+            f"{fmt(night_deaths)}% of deaths happen between 10 pm and 6 am, while only {fmt(night_crashes)}% of crashes do."
         )
-    texte_vulnerables = (
-        f"En {fin}, {nombre(vulnerables[fin])} % des tués étaient à pied, à vélo, en trottinette ou en deux-roues motorisé"
-    )
-    if debut < fin and tues["annee"].eq(debut).any():
-        texte_vulnerables += f", contre {nombre(vulnerables[debut])} % en {debut}"
-    with colonne3.container(border = True):
-        st.markdown(f"**3. Les usagers vulnérables restent exposés.**\n\n{texte_vulnerables}.")
+    if killed["year"].eq(end).any():
+        vulnerable_text = f"In {end}, {fmt(vulnerable[end])}% of those killed were on foot, on a bicycle, an e-scooter or a motorised two-wheeler"
+        if start < end and killed["year"].eq(start).any():
+            vulnerable_text += f", against {fmt(vulnerable[start])}% in {start}"
+    else:
+        vulnerable_text = f"No deaths in {end} in this selection"
+    with col3.container(border = True):
+        st.markdown(f"**3. Vulnerable road users remain exposed.**\n\n{vulnerable_text}.")
 
-    # Pistes d'action, une par constat
-    st.subheader("Pistes d'action pour un décideur local")
+    st.subheader("Possible actions for local decision-makers")
     st.markdown(
-        "Ces données montrent **où et quand** la route tue, pas **pourquoi** : les pistes ci-dessous sont à étudier "
-        "au cas par cas, pas des solutions dont l'efficacité serait prouvée ici."
+        "This data shows **where and when** people die on the roads, not **why**: the actions below are leads to study "
+        "case by case, not solutions proven by this analysis."
     )
     st.markdown(
-        "- **Routes départementales** : repérer les tronçons où se concentrent les accidents mortels, puis étudier "
-        "les aménagements (séparation des voies, traitement des obstacles en bord de route, carrefours) et les contrôles de vitesse.\n"
-        "- **Nuit et week-end** : cibler les contrôles (vitesse, alcool, stupéfiants) et la prévention sur ces créneaux, "
-        "et étudier l'éclairage des carrefours les plus accidentés.\n"
-        "- **Usagers vulnérables** : développer des aménagements cyclables séparés de la circulation, sécuriser les traversées "
-        "piétonnes et apaiser la vitesse en ville ; accompagner la mobilité des seniors."
+        "- **Departmental roads**: identify the sections where fatal crashes concentrate, then study road layout changes "
+        "(separating traffic, treating roadside obstacles, junctions) and speed enforcement.\n"
+        "- **Nights and weekends**: target checks (speed, alcohol, drugs) and prevention at these times, "
+        "and study lighting at the junctions with the most crashes.\n"
+        "- **Vulnerable users**: build cycle lanes separated from traffic, make pedestrian crossings safer and lower speeds "
+        "in towns; support older people's mobility."
     )
 
-    # Ce que les données ne disent pas encore
-    st.subheader("Pour aller plus loin")
+    st.subheader("Going further")
     st.markdown(
-        "- **Rapporter à la population** (INSEE) pour mesurer le risque par habitant, et pas seulement par accident.\n"
-        "- **Rapporter au trafic** (kilomètres parcourus) pour savoir si la hausse des cyclistes tués vient d'un risque "
-        "plus élevé ou simplement de plus de cyclistes.\n"
-        "- **Évaluer les mesures locales**, par exemple comparer avant et après le passage à 80 km/h, ou le retour à 90 km/h "
-        "décidé par certains départements."
+        "- **Relate to population** (INSEE) to measure the risk per inhabitant, not just per crash.\n"
+        "- **Relate to traffic** (kilometres travelled) to know whether the rise in cyclist deaths comes from a higher risk "
+        "or simply from more cyclists.\n"
+        "- **Evaluate local measures**, for example before and after the switch to 80 km/h, or the return to 90 km/h "
+        "decided by some departments."
     )
     st.success(
-        "En résumé, en France métropolitaine : après une forte baisse entre 2005 et 2013, la mortalité routière stagne. "
-        "Les marges de progrès se trouvent sur les routes de campagne, la nuit, et auprès des usagers vulnérables."
+        "In short, in metropolitan France: after a sharp fall between 2005 and 2013, road deaths have stalled. "
+        "The room for improvement lies on rural roads, at night, and among vulnerable road users."
     )

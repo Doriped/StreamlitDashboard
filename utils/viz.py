@@ -4,285 +4,234 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 
-# Couleurs pour le thème clair et le thème sombre de Streamlit.
-# Palette de référence validée : contraste suffisant sur le fond, et couleurs distinguables par les daltoniens.
-COULEURS = {
+# Light and dark theme colors (colorblind-safe palette, readable contrast on both backgrounds)
+COLORS = {
     "light": {
-        "serie": "#2a78d6", "serie2": "#eb6834", "texte": "#52514e", "reference": "#898781",
-        "contour": "#fcfcfb", "selection": "#0b0b0b",
-        # dégradé d'une seule teinte, du plus faible (clair) au plus fort (foncé)
-        "degrade": ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"],
+        "series": "#2a78d6", "series2": "#eb6834", "text": "#52514e", "reference": "#898781",
+        "border": "#fcfcfb", "selection": "#0b0b0b",
+        "scale": ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"],
     },
     "dark": {
-        "serie": "#3987e5", "serie2": "#d95926", "texte": "#c3c2b7", "reference": "#898781",
-        "contour": "#1a1a19", "selection": "#f0efec",
-        # sur fond sombre, le plus faible se fond dans le fond (foncé) et le plus fort ressort (clair)
-        "degrade": ["#0d366b", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"],
+        "series": "#3987e5", "series2": "#d95926", "text": "#c3c2b7", "reference": "#898781",
+        "border": "#1a1a19", "selection": "#f0efec",
+        # on a dark background, low values blend into the background and high values stand out
+        "scale": ["#0d366b", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"],
     },
 }
 
 
-# Renvoie les couleurs du thème (clair ou sombre) choisi par l'utilisateur
-def couleurs():
-    theme = st.context.theme.type or "light"
-    return COULEURS[theme]
+def colors():
+    return COLORS[st.context.theme.type or "light"]
 
 
-# Écrit un nombre au format français : nombre(3193) → « 3 193 », nombre(6.25, 1) → « 6,3 »
-def nombre(valeur, decimales = 0):
-    texte = f"{valeur:,.{decimales}f}"                       # format anglais : 3,193.0
-    return texte.replace(",", " ").replace(".", ",")         # format français : 3 193,0
+# fmt(3193) → "3,193", fmt(6.25, 1) → "6.3"
+def fmt(value, decimals = 0):
+    return f"{value:,.{decimals}f}"
 
 
-# Style commun à tous les graphiques : nombres au format français, axes titrés, marges réduites
-def styliser(fig, titre_x, titre_y, hauteur = 380):
-    fig.update_layout(
-        height = hauteur,
-        margin = dict(l = 10, r = 10, t = 30, b = 10),
-        separators = ", ",  # virgule décimale et espace pour les milliers : 6,3 et 3 193
-        showlegend = False,
-        hovermode = "x",
-    )
-    fig.update_xaxes(title = titre_x, showgrid = False)
-    fig.update_yaxes(title = titre_y, rangemode = "tozero")
+# Layout shared by all charts
+def style(fig, x_title, y_title, height = 380):
+    fig.update_layout(height = height, margin = dict(l = 10, r = 10, t = 30, b = 10), showlegend = False, hovermode = "x")
+    fig.update_xaxes(title = x_title, showgrid = False)
+    fig.update_yaxes(title = y_title, rangemode = "tozero")
     return fig
 
 
-# Courbe d'une valeur par année, avec des annotations sur les années clés
-# et, si demandé, une ligne de référence horizontale au niveau d'une année donnée.
-def courbe_annuelle(valeurs, titre_y, unite, annotations, annee_reference = None):
-    c = couleurs()
+# One value per year. annotations = {year: (text, vertical offset in px)}, negative = above the point.
+def yearly_line(values, y_title, unit, annotations, reference_year = None):
+    c = colors()
     fig = go.Figure(go.Scatter(
-        x = valeurs.index,
-        y = valeurs.values,
-        mode = "lines+markers",
-        line = dict(color = c["serie"], width = 2),
-        marker = dict(size = 8),
-        hovertemplate = "%{x} : <b>%{y:,}</b> " + unite + "<extra></extra>",
+        x = values.index, y = values.values, mode = "lines+markers",
+        line = dict(color = c["series"], width = 2), marker = dict(size = 8),
+        hovertemplate = "%{x}: <b>%{y:,}</b> " + unit + "<extra></extra>",
     ))
 
-    if annee_reference in valeurs.index:
+    if reference_year in values.index:
         fig.add_hline(
-            y = valeurs[annee_reference],
+            y = values[reference_year],
             line = dict(color = c["reference"], width = 1, dash = "dash"),
-            annotation_text = f"Niveau de {annee_reference}",
-            annotation_position = "top left",
-            annotation_font_color = c["texte"],
+            annotation_text = f"{reference_year} level", annotation_position = "top left",
+            annotation_font_color = c["text"],
         )
 
-    for annee, (texte, decalage) in annotations.items():
-        if annee in valeurs.index:
+    for year, (text, offset) in annotations.items():
+        if year in values.index:
             fig.add_annotation(
-                x = annee, y = valeurs[annee], text = texte,
-                showarrow = True, arrowhead = 0, ax = 0, ay = decalage,
-                arrowcolor = c["reference"], font = dict(color = c["texte"], size = 12),
+                x = year, y = values[year], text = text,
+                showarrow = True, arrowhead = 0, ax = 0, ay = offset,
+                arrowcolor = c["reference"], font = dict(color = c["text"], size = 12),
             )
 
-    fig = styliser(fig, "Année", titre_y)
-    fig.update_xaxes(range = [valeurs.index.min() - 0.5, valeurs.index.max() + 0.5], dtick = 2)
+    fig = style(fig, "Year", y_title)
+    fig.update_xaxes(range = [values.index.min() - 0.5, values.index.max() + 0.5], dtick = 2)
     return fig
 
 
-# Barres horizontales groupées : pour chaque catégorie, la part des accidents et la part des tués (en %).
-def barres_parts(tableau, hauteur = 300):
-    c = couleurs()
-    tableau = tableau.sort_values("part_tues")  # Plotly dessine de bas en haut : la plus grande part en haut
+# Grouped horizontal bars: share of crashes and share of deaths for each category.
+# table needs the columns accidents, killed, share_accidents, share_killed.
+def share_bars(table, height = 300):
+    c = colors()
+    table = table.sort_values("share_killed")  # Plotly draws bottom-up: largest share on top
     fig = go.Figure()
     series = [
-        ("Part des accidents", "part_accidents", "accidents", "accidents", c["serie"]),
-        ("Part des tués", "part_tues", "tues", "tués", c["serie2"]),
+        ("Share of crashes", "share_accidents", "accidents", "crashes", c["series"]),
+        ("Share of deaths", "share_killed", "killed", "deaths", c["series2"]),
     ]
-    for nom, colonne_part, colonne_nombre, unite, couleur in series:
+    for name, share_column, count_column, unit, color in series:
         fig.add_trace(go.Bar(
-            name = nom,
-            y = tableau.index,
-            x = tableau[colonne_part],
-            orientation = "h",
-            marker = dict(color = couleur, cornerradius = 4),
-            text = tableau[colonne_part].map(lambda v: nombre(v) + " %"),
-            textposition = "outside",
-            customdata = tableau[colonne_nombre],
-            hovertemplate = "%{y} : <b>%{x:.0f} %</b> des " + unite + " (%{customdata:,} " + unite + ")<extra></extra>",
+            name = name, y = table.index, x = table[share_column], orientation = "h",
+            marker = dict(color = color, cornerradius = 4),
+            text = table[share_column].map(lambda v: fmt(v) + "%"), textposition = "outside",
+            customdata = table[count_column],
+            hovertemplate = "%{y}: <b>%{x:.0f}%</b> of " + unit + " (%{customdata:,} " + unit + ")<extra></extra>",
         ))
-    fig = styliser(fig, "Part du total (%)", None, hauteur)
+    fig = style(fig, "Share of total (%)", None, height)
     fig.update_layout(
         barmode = "group", bargap = 0.25, bargroupgap = 0.1, hovermode = "closest",
         showlegend = True, legend = dict(orientation = "h", y = 1.12, x = 0, traceorder = "reversed"),
     )
-    fig.update_xaxes(range = [0, tableau[["part_accidents", "part_tues"]].max().max() * 1.2], showgrid = True)
+    fig.update_xaxes(range = [0, table[["share_accidents", "share_killed"]].max().max() * 1.2], showgrid = True)
     fig.update_yaxes(rangemode = "normal")
     return fig
 
 
-# Carte des départements, colorée selon une valeur (dégradé d'une seule teinte).
-# donnees : une ligne par département, indexée par son code, avec les colonnes nom, accidents, tues, letalite
-def carte_departements(donnees, colonne, titre_couleur, contours, departement_selectionne = None):
-    c = couleurs()
+# Choropleth of departments. data is indexed by department code, with the columns name, accidents, killed, lethality.
+def department_map(data, column, color_title, geojson, selected = None):
+    c = colors()
     fig = go.Figure(go.Choropleth(
-        geojson = contours,
-        featureidkey = "properties.code",  # le code du département dans le fichier des contours
-        locations = donnees.index,
-        z = donnees[colonne],
-        colorscale = c["degrade"],
-        # L'échelle s'arrête au 95e percentile : un département extrême ne doit pas écraser les nuances des autres
-        zmin = 0,
-        zmax = donnees[colonne].quantile(0.95),
-        marker = dict(line = dict(color = c["contour"], width = 0.5)),
-        colorbar = dict(title = dict(text = titre_couleur, side = "right"), thickness = 12),
-        customdata = donnees[["nom", "accidents", "tues", "letalite"]],
+        geojson = geojson, featureidkey = "properties.code", locations = data.index, z = data[column],
+        colorscale = c["scale"],
+        zmin = 0, zmax = data[column].quantile(0.95),  # one extreme department shouldn't flatten the others
+        marker = dict(line = dict(color = c["border"], width = 0.5)),
+        colorbar = dict(title = dict(text = color_title, side = "right"), thickness = 12),
+        customdata = data[["name", "accidents", "killed", "lethality"]],
         hovertemplate = (
             "<b>%{location} – %{customdata[0]}</b><br>"
-            "%{customdata[1]:,} accidents · %{customdata[2]:,} tués<br>"
-            "%{customdata[3]:.1f} tués pour 100 accidents<extra></extra>"
+            "%{customdata[1]:,} crashes · %{customdata[2]:,} deaths<br>"
+            "%{customdata[3]:.1f} deaths per 100 crashes<extra></extra>"
         ),
     ))
 
-    # Contour épais autour du département choisi dans le filtre
-    if departement_selectionne in donnees.index:
+    # Thick outline around the selected department
+    if selected in data.index:
         fig.add_trace(go.Choropleth(
-            geojson = contours, featureidkey = "properties.code",
-            locations = [departement_selectionne], z = [0],
+            geojson = geojson, featureidkey = "properties.code", locations = [selected], z = [0],
             colorscale = [[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]], showscale = False,
-            marker = dict(line = dict(color = c["selection"], width = 3)),
-            hoverinfo = "skip",
+            marker = dict(line = dict(color = c["selection"], width = 3)), hoverinfo = "skip",
         ))
 
     fig.update_geos(fitbounds = "locations", visible = False, bgcolor = "rgba(0,0,0,0)")
-    fig.update_layout(height = 560, margin = dict(l = 0, r = 0, t = 10, b = 0), separators = ", ")
+    fig.update_layout(height = 560, margin = dict(l = 0, r = 0, t = 10, b = 0))
     return fig
 
 
-# Carte de chaleur : une case par (ligne, colonne), colorée selon une valeur (dégradé d'une seule teinte).
-# valeurs, accidents, tues : trois tableaux de même forme (par exemple jours × heures)
-def carte_chaleur(valeurs, accidents, tues, titre_x, titre_y, titre_couleur, unite_colonne = ""):
-    c = couleurs()
+# values, accidents and killed are tables of the same shape (e.g. weekdays × hours)
+def heatmap(values, accidents, killed, x_title, y_title, color_title, column_suffix = ""):
+    c = colors()
     fig = go.Figure(go.Heatmap(
-        z = valeurs.values,
-        x = [f"{colonne}{unite_colonne}" for colonne in valeurs.columns],
-        y = valeurs.index,
-        colorscale = c["degrade"],
-        zmin = 0,
-        zmax = pd.Series(valeurs.values.ravel()).quantile(0.95),  # comme la carte : un extrême n'écrase pas les nuances
-        xgap = 2, ygap = 2,  # un fin espace entre les cases
-        colorbar = dict(title = dict(text = titre_couleur, side = "right"), thickness = 12),
-        # pour chaque case, le couple (accidents, tués), affiché dans l'infobulle
-        customdata = np.dstack([accidents.values, tues.values]),
+        z = values.values, x = [f"{column}{column_suffix}" for column in values.columns], y = values.index,
+        colorscale = c["scale"], zmin = 0, zmax = pd.Series(values.values.ravel()).quantile(0.95),
+        xgap = 2, ygap = 2,
+        colorbar = dict(title = dict(text = color_title, side = "right"), thickness = 12),
+        customdata = np.dstack([accidents.values, killed.values]),
         hovertemplate = (
-            "<b>%{y}, %{x}</b><br>%{customdata[0]:,} accidents · %{customdata[1]:,} tués<br>"
-            "%{z:.1f} " + titre_couleur.lower() + "<extra></extra>"
+            "<b>%{y}, %{x}</b><br>%{customdata[0]:,} crashes · %{customdata[1]:,} deaths<br>"
+            "%{z:.1f} " + color_title.lower() + "<extra></extra>"
         ),
     ))
-    fig = styliser(fig, titre_x, titre_y, hauteur = 360)
+    fig = style(fig, x_title, y_title, height = 360)
     fig.update_layout(hovermode = "closest")
-    fig.update_yaxes(autorange = "reversed", rangemode = "normal")  # lundi en haut, dimanche en bas
+    fig.update_yaxes(autorange = "reversed", rangemode = "normal")  # Monday on top
     return fig
 
 
-# Barres horizontales d'une seule série, avec la valeur au bout de chaque barre
-# et, si demandé, une ligne verticale de référence (par exemple la moyenne)
-def barres_simples(valeurs, titre_x, unite, reference = None, texte_reference = "", hauteur = 300):
-    c = couleurs()
-    valeurs = valeurs.sort_values()  # Plotly dessine de bas en haut : la plus grande valeur en haut
+# Single-series horizontal bars, with an optional vertical reference line (e.g. the average)
+def simple_bars(values, x_title, unit, reference = None, reference_text = "", height = 300):
+    c = colors()
+    values = values.sort_values()
     fig = go.Figure(go.Bar(
-        y = valeurs.index,
-        x = valeurs.values,
-        orientation = "h",
-        marker = dict(color = c["serie"], cornerradius = 4),
-        text = valeurs.map(lambda v: nombre(v, 1)),
-        textposition = "outside",
-        hovertemplate = "%{y} : <b>%{x:.1f}</b> " + unite + "<extra></extra>",
+        y = values.index, x = values.values, orientation = "h",
+        marker = dict(color = c["series"], cornerradius = 4),
+        text = values.map(lambda v: fmt(v, 1)), textposition = "outside",
+        hovertemplate = "%{y}: <b>%{x:.1f}</b> " + unit + "<extra></extra>",
     ))
     if reference is not None:
         fig.add_vline(
-            x = reference,
-            line = dict(color = c["reference"], width = 1, dash = "dash"),
-            annotation_text = texte_reference,
-            annotation_position = "top",
-            annotation_font_color = c["texte"],
+            x = reference, line = dict(color = c["reference"], width = 1, dash = "dash"),
+            annotation_text = reference_text, annotation_position = "top", annotation_font_color = c["text"],
         )
-    fig = styliser(fig, titre_x, None, hauteur)
+    fig = style(fig, x_title, None, height)
     fig.update_layout(hovermode = "closest")
-    fig.update_xaxes(range = [0, valeurs.max() * 1.2], showgrid = True)
+    fig.update_xaxes(range = [0, values.max() * 1.2], showgrid = True)
     fig.update_yaxes(rangemode = "normal")
     return fig
 
 
-# Petits multiples : un mini-graphique par colonne du tableau (par exemple un par mode de déplacement),
-# chacun avec sa propre échelle verticale, pour comparer la forme des évolutions.
-# tableau : une ligne par année, une colonne par série ; titres : {colonne: titre du mini-graphique}
-def petits_multiples(tableau, titres, unite, nb_colonnes = 3):
-    c = couleurs()
-    nb_lignes = -(-len(tableau.columns) // nb_colonnes)  # division arrondie au supérieur
+# One small chart per column, each with its own y scale, to compare trends.
+# table: one row per year, one column per series; titles: {column: chart title}
+def small_multiples(table, titles, unit, n_cols = 3):
+    c = colors()
+    n_rows = -(-len(table.columns) // n_cols)  # ceiling division
     fig = make_subplots(
-        rows = nb_lignes, cols = nb_colonnes,
-        subplot_titles = [titres[colonne] for colonne in tableau.columns],
+        rows = n_rows, cols = n_cols, subplot_titles = [titles[column] for column in table.columns],
         vertical_spacing = 0.18, horizontal_spacing = 0.07,
     )
-    for i, colonne in enumerate(tableau.columns):
+    for i, column in enumerate(table.columns):
         fig.add_trace(
             go.Scatter(
-                x = tableau.index, y = tableau[colonne], mode = "lines+markers",
-                line = dict(color = c["serie"], width = 2), marker = dict(size = 5),
-                hovertemplate = colonne + ", %{x} : <b>%{y:,}</b> " + unite + "<extra></extra>",
+                x = table.index, y = table[column], mode = "lines+markers",
+                line = dict(color = c["series"], width = 2), marker = dict(size = 5),
+                hovertemplate = column + ", %{x}: <b>%{y:,}</b> " + unit + "<extra></extra>",
             ),
-            row = i // nb_colonnes + 1, col = i % nb_colonnes + 1,
+            row = i // n_cols + 1, col = i % n_cols + 1,
         )
-    fig.update_layout(
-        height = 260 * nb_lignes, margin = dict(l = 10, r = 10, t = 40, b = 10),
-        separators = ", ", showlegend = False, hovermode = "closest",
-    )
+    fig.update_layout(height = 260 * n_rows, margin = dict(l = 10, r = 10, t = 40, b = 10), showlegend = False, hovermode = "closest")
     fig.update_yaxes(rangemode = "tozero")
-    fig.update_xaxes(showgrid = False, dtick = 5, range = [tableau.index.min() - 0.5, tableau.index.max() + 0.5])
-    fig.update_annotations(font = dict(size = 13, color = c["texte"]))  # les titres des mini-graphiques
+    fig.update_xaxes(showgrid = False, dtick = 5, range = [table.index.min() - 0.5, table.index.max() + 0.5])
+    fig.update_annotations(font = dict(size = 13, color = c["text"]))  # subplot titles
     return fig
 
 
-# Barres verticales groupées : comparer deux colonnes (par exemple deux années) pour chaque catégorie
-def barres_comparaison(tableau, titre_x, titre_y, unite, hauteur = 380):
-    c = couleurs()
+# Grouped vertical bars comparing two columns (e.g. two years) for each category
+def comparison_bars(table, x_title, y_title, unit, height = 380):
+    c = colors()
     fig = go.Figure()
-    for colonne, couleur in zip(tableau.columns, [c["serie"], c["serie2"]]):
+    for column, color in zip(table.columns, [c["series"], c["series2"]]):
         fig.add_trace(go.Bar(
-            name = str(colonne),
-            x = tableau.index,
-            y = tableau[colonne],
-            marker = dict(color = couleur, cornerradius = 4),
-            text = tableau[colonne].map(nombre),
-            textposition = "outside",
-            hovertemplate = "%{x}, " + str(colonne) + " : <b>%{y:,}</b> " + unite + "<extra></extra>",
+            name = str(column), x = table.index, y = table[column],
+            marker = dict(color = color, cornerradius = 4),
+            text = table[column].map(fmt), textposition = "outside",
+            hovertemplate = "%{x}, " + str(column) + ": <b>%{y:,}</b> " + unit + "<extra></extra>",
         ))
-    fig = styliser(fig, titre_x, titre_y, hauteur)
+    fig = style(fig, x_title, y_title, height)
     fig.update_layout(
         barmode = "group", bargap = 0.25, bargroupgap = 0.1, hovermode = "closest",
         showlegend = True, legend = dict(orientation = "h", y = 1.1, x = 0),
     )
-    fig.update_yaxes(range = [0, tableau.max().max() * 1.15])
+    fig.update_yaxes(range = [0, table.max().max() * 1.15])
     return fig
 
 
-# Plusieurs courbes sur le même axe (au maximum deux, de même ordre de grandeur),
-# avec une ligne verticale pour signaler une année particulière (par exemple un changement de méthode)
-def courbes(tableau, titre_y, unite, annee_marquee = None, texte_marque = ""):
-    c = couleurs()
+# Up to two lines of similar scale, with an optional dashed line before a given year (e.g. a method change)
+def lines(table, y_title, unit, marked_year = None, mark_text = ""):
+    c = colors()
     fig = go.Figure()
-    for colonne, couleur in zip(tableau.columns, [c["serie"], c["serie2"]]):
+    for column, color in zip(table.columns, [c["series"], c["series2"]]):
         fig.add_trace(go.Scatter(
-            name = colonne, x = tableau.index, y = tableau[colonne], mode = "lines+markers",
-            line = dict(color = couleur, width = 2), marker = dict(size = 6),
-            hovertemplate = colonne + " : <b>%{y:,}</b> " + unite + "<extra></extra>",
+            name = column, x = table.index, y = table[column], mode = "lines+markers",
+            line = dict(color = color, width = 2), marker = dict(size = 6),
+            hovertemplate = column + ": <b>%{y:,}</b> " + unit + "<extra></extra>",
         ))
-    if annee_marquee is not None:
+    if marked_year is not None:
         fig.add_vline(
-            x = annee_marquee - 0.5,  # entre l'année précédente et l'année marquée
-            line = dict(color = c["reference"], width = 1, dash = "dash"),
-            annotation_text = texte_marque, annotation_position = "bottom left",
-            annotation_font_color = c["texte"],
+            x = marked_year - 0.5, line = dict(color = c["reference"], width = 1, dash = "dash"),
+            annotation_text = mark_text, annotation_position = "bottom left", annotation_font_color = c["text"],
         )
-    fig = styliser(fig, "Année", titre_y)
+    fig = style(fig, "Year", y_title)
     fig.update_layout(
         showlegend = True, legend = dict(orientation = "h", y = 1.15, x = 0), hovermode = "x unified",
-        margin = dict(l = 10, r = 10, t = 50, b = 10),  # de la place au-dessus pour la légende
+        margin = dict(l = 10, r = 10, t = 50, b = 10),
     )
-    fig.update_xaxes(range = [tableau.index.min() - 0.5, tableau.index.max() + 0.5], dtick = 2)
-    fig.update_yaxes(tickformat = ",d")  # « 70 000 » plutôt que la notation anglaise « 70k »
+    fig.update_xaxes(range = [table.index.min() - 0.5, table.index.max() + 0.5], dtick = 2)
+    fig.update_yaxes(tickformat = ",d")  # "70,000" rather than "70k"
     return fig

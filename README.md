@@ -1,130 +1,130 @@
-# Routes de France : pourquoi la route ne tue pas moins depuis 10 ans
+# Roads of France: why road deaths have not fallen in 10 years
 
-Dashboard Streamlit de *data storytelling* sur les accidents corporels de la circulation routière en France, de 2005 à 2024.
+A Streamlit data storytelling dashboard on road traffic injury accidents in France, 2005-2024.
 
-Après une forte baisse entre 2005 et 2013, la mortalité routière stagne autour de 3 200 tués par an en métropole. Le dashboard montre **où, quand et pour qui la route tue encore** : sur les routes de campagne, la nuit, et parmi les usagers vulnérables (cyclistes, seniors).
+After a sharp fall between 2005 and 2013, road deaths in metropolitan France have stalled at around 3,200 a year. The dashboard shows **where, when and among whom people still die on the roads**: on rural roads, at night, and among vulnerable road users (cyclists, older people).
 
-- **Application en ligne** : [routes-de-france.streamlit.app](https://routes-de-france.streamlit.app/)
-- **Code source** : [github.com/Doriped/StreamlitDashboard](https://github.com/Doriped/StreamlitDashboard)
-- **Vidéo de démonstration** : *(à compléter)*
-- **Storyboard** : [STORYBOARD.md](STORYBOARD.md)
-- **Auteur** : *Anguille Dorian* — EFREI Paris, projet individuel de Data Visualization 2026
+- **Live app**: [routes-de-france.streamlit.app](https://routes-de-france.streamlit.app/)
+- **Source code**: [github.com/Doriped/StreamlitDashboard](https://github.com/Doriped/StreamlitDashboard)
+- **Demo video**: *(to be added)*
+- **Storyboard**: [STORYBOARD.md](STORYBOARD.md)
+- **Author**: *Anguille Dorian* — EFREI Paris, individual Data Visualization project 2026
 
-## Le projet en bref
+## The project in brief
 
 | | |
 |---|---|
-| **Public visé** | Décideurs locaux : élus et services des conseils départementaux, préfectures, communes |
-| **Question** | La mortalité routière stagne depuis 2013 : où, quand et pour qui la route tue-t-elle encore ? |
-| **Message** | Le danger se concentre hors des villes (70 % des tués), la nuit (22 % des tués pour 12 % des accidents) et chez les usagers vulnérables (45 % des tués en 2024) |
-| **Indicateurs** | Le nombre de **tués** (seul indicateur de gravité comparable sur 20 ans) et la **létalité** (tués pour 100 accidents) |
+| **Audience** | Local decision-makers: elected officials and staff of departmental councils, prefectures, municipalities |
+| **Question** | Road deaths have stalled since 2013: where, when and among whom do people still die on the roads? |
+| **Message** | The danger is concentrated outside towns (70% of deaths), at night (22% of deaths for 12% of crashes) and among vulnerable road users (45% of deaths in 2024) |
+| **Indicators** | The number of **deaths** (the only severity measure comparable over 20 years) and **lethality** (deaths per 100 crashes) |
 
-## Les données
+## Data
 
-| Données | Source | Licence |
+| Data | Source | Licence |
 |---|---|---|
-| Accidents corporels 2005-2024 : 4 fichiers par an (caractéristiques, lieux, véhicules, usagers) | [Bases de données annuelles des accidents corporels de la circulation routière](https://www.data.gouv.fr/datasets/bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-annees-de-2005-a-2024) — ONISR / Ministère de l'Intérieur, data.gouv.fr | Licence Ouverte 2.0 |
-| Contours des départements (pour la carte) | [Contours administratifs](https://www.data.gouv.fr/datasets/contours-administratifs) — data.gouv.fr, version simplifiée à 1 000 m | ODbL |
+| Injury accidents 2005-2024: 4 files per year (characteristics, locations, vehicles, users) | [Bases de données annuelles des accidents corporels de la circulation routière](https://www.data.gouv.fr/datasets/bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-annees-de-2005-a-2024) — ONISR / French Ministry of the Interior, data.gouv.fr | Licence Ouverte 2.0 |
+| Department boundaries (for the map) | [Contours administratifs](https://www.data.gouv.fr/datasets/contours-administratifs) — data.gouv.fr, simplified to 1,000 m | ODbL |
 
-La documentation officielle des variables est fournie dans [docs/description-des-bases-de-donnees-annuelles.pdf](docs/description-des-bases-de-donnees-annuelles.pdf).
+The official variable documentation (in French) is in [docs/description-des-bases-de-donnees-annuelles.pdf](docs/description-des-bases-de-donnees-annuelles.pdf).
 
-Les fichiers bruts (80 CSV, 440 Mo) ne sont pas inclus : ils sont téléchargés par un script. Les **tables propres** (`data/processed/`, 40 Mo) et les contours (`data/geo/`) sont inclus, pour que le dashboard démarre sans attendre.
+The raw files (80 CSV files, 440 MB) are not included: a script downloads them. The **clean tables** (`data/processed/`, 40 MB) and the boundaries (`data/geo/`) are included, so the dashboard starts right away.
 
-## Installation et lancement
+## Install and run
 
-Prérequis : **Python 3.11** (testé avec Python 3.11.9 sous Windows).
+Requires **Python 3.11** (tested with Python 3.11.9 on Windows).
 
 ```powershell
-# 1. Créer l'environnement virtuel et installer les librairies (versions figées)
+# 1. Create the virtual environment and install the pinned dependencies
 python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 
-# 2. Lancer le dashboard (il s'ouvre dans le navigateur, sur http://localhost:8501)
+# 2. Run the dashboard (it opens in the browser at http://localhost:8501)
 .venv\Scripts\python -m streamlit run app.py
 ```
 
-Sous macOS ou Linux, remplacer `.venv\Scripts\python` par `.venv/bin/python`.
+On macOS or Linux, replace `.venv\Scripts\python` with `.venv/bin/python`.
 
-### Reconstruire les données depuis zéro (facultatif)
+### Rebuilding the data from scratch (optional)
 
-Les tables propres sont déjà fournies. Pour les reconstruire à partir des fichiers officiels :
+The clean tables are already provided. To rebuild them from the official files:
 
 ```powershell
-# Télécharge les 80 fichiers bruts et les contours (environ 1 min 30) ; les fichiers déjà présents ne sont pas retéléchargés
+# Downloads the 80 raw files and the boundaries (about 1.5 min); files already present are skipped
 .venv\Scripts\python scripts\download_data.py
 
-# Nettoie, assemble et contrôle les 20 années, puis écrit data/processed/ (environ 2 min)
+# Cleans, joins and checks the 20 years, then writes data/processed/ (about 2 min)
 .venv\Scripts\python scripts\build_dataset.py
 ```
 
-## Structure du projet
+## Project structure
 
 ```
-app.py                      point d'entrée : filtres de la barre latérale, puis les 6 sections dans l'ordre de l'histoire
+app.py                      entry point: sidebar filters, then the 6 sections in story order
 sections/
-├── accroche.py             1. indicateurs clés et courbe des tués 2005-2024
-├── ou.py                   2. en / hors agglomération, types de route, carte des départements
-├── quand.py                3. carte de chaleur heure × jour, éclairage
-├── qui.py                  4. petits multiples par mode de déplacement, classes d'âge
-├── qualite.py              5. contrôles, corrections et limites des données
-└── conclusions.py          6. constats clés et pistes d'action
+├── hook.py                 1. key figures and road deaths 2005-2024
+├── where.py                2. inside / outside built-up areas, road types, department map
+├── when.py                 3. hour × weekday heatmap, light conditions
+├── who.py                  4. small multiples by travel mode, age groups
+├── quality.py              5. data checks, fixes and limitations
+└── conclusions.py          6. key findings and possible actions
 utils/
-├── io.py                   chargement des données (avec st.cache_data) et citation des sources
-├── filtres.py              application des filtres
-├── prep.py                 lecture et nettoyage des fichiers bruts, jointures
-├── qualite.py              contrôles qualité de chaque année
-└── viz.py                  fonctions de graphiques au style commun (couleurs, format des nombres)
+├── io.py                   data loading (cached) and source citation
+├── filters.py              sidebar filters
+├── prep.py                 reading and cleaning the raw files, joins
+├── quality.py              yearly quality checks
+└── viz.py                  chart functions with a shared style
 scripts/
-├── download_data.py        téléchargement des données (API data.gouv.fr, avec cache)
-└── build_dataset.py        construction des tables propres
+├── download_data.py        data download (data.gouv.fr API, skips existing files)
+└── build_dataset.py        builds the clean tables
 data/
-├── raw/                    fichiers bruts téléchargés (non inclus)
-├── processed/              tables propres : accidents.parquet, personnes.parquet, qualite.parquet
-└── geo/                    contours des départements
-docs/                       documentation officielle des variables (ONISR)
-STORYBOARD.md               cadrage, public, déroulé de l'histoire
+├── raw/                    downloaded raw files (not included)
+├── processed/              clean tables: accidents.parquet, people.parquet, quality.parquet
+└── geo/                    department boundaries
+docs/                       official variable documentation (ONISR)
+STORYBOARD.md               framing, audience, story outline
 ```
 
-## Méthode
+## Method
 
-### Préparation des données
+### Data preparation
 
-Les 80 fichiers sont lus, nettoyés et assemblés en **deux tables** de niveaux différents :
+The 80 files are read, cleaned and joined into **two tables** at different levels:
 
-- **`accidents`** (1 286 097 lignes, une par accident) : date, heure, département, conditions, type de route, et le bilan humain (tués, blessés) ;
-- **`personnes`** (2 887 353 lignes, une par personne impliquée) : gravité, âge, sexe, mode de déplacement, et le contexte de l'accident.
+- **`accidents`** (1,286,097 rows, one per crash): date, hour, department, conditions, road type and casualty counts;
+- **`people`** (2,887,353 rows, one per person involved): severity, age, sex, travel mode and the context of the crash.
 
-Deux tables sont nécessaires : un accident implique plusieurs personnes, et les mettre dans une seule table ferait compter plusieurs fois le même accident. Le bilan humain est donc **résumé par accident** (`pd.crosstab`) avant d'être joint à la table des accidents.
+Two tables are needed because a crash involves several people: a single table would count the same crash several times. Casualties are therefore **counted per crash** (`pd.crosstab`) before being joined to the accidents table.
 
-Les colonnes de codes sont traduites en libellés à l'aide de la documentation officielle, et les 40 catégories de véhicules sont regroupées en 8 modes de déplacement.
+Coded columns are turned into labels using the official documentation, and the 40 vehicle categories are grouped into 8 travel modes.
 
-### Corrections apportées
+### Fixes
 
-- **Deux formats de fichiers** (2005-2018 et 2019-2024) : séparateur (`,`, tabulation ou `;`), encodage (Latin-1 ou UTF-8), année sans siècle, heure en nombre, codes départements sur 3 chiffres, coordonnées GPS multipliées par 100 000. Le séparateur et l'encodage sont détectés automatiquement.
-- **Colonne renommée** en 2022 (`Accident_Id` au lieu de `Num_Acc`).
-- **Zéros perdus dans les codes départements** en 2009 et en 2019 (`8` au lieu de `08`), qui faisaient changer des milliers d'accidents de département.
-- **Coordonnées GPS impossibles** effacées (toutes celles de 2009), **vitesses autorisées aberrantes** remplacées par « inconnue », **lieux multiples** pour un même accident réduits au lieu principal, **véhicules en double** supprimés.
-- **Ancien code « piéton en roller ou trottinette »** (jusqu'en 2017) rattaché aux piétons, comme le fait l'ONISR.
+- **Two file formats** (2005-2018 and 2019-2024): separator (`,`, tab or `;`), encoding (Latin-1 or UTF-8), year without century, hour as a number, 3-digit department codes, GPS coordinates multiplied by 100,000. The separator and encoding are detected automatically.
+- **Renamed column** in 2022 (`Accident_Id` instead of `Num_Acc`).
+- **Lost leading zeros in department codes** in 2009 and 2019 (`8` instead of `08`), which moved thousands of crashes to the wrong department.
+- **Impossible GPS coordinates** removed (all of them in 2009), **absurd speed limits** set to unknown, **several locations for one crash** reduced to the main one, **duplicate vehicles** removed.
+- **Old "pedestrian on rollers or kick scooter" code** (until 2017) counted as pedestrians, as ONISR does.
 
-### Contrôles et validation
+### Checks and validation
 
-Pour chaque année : doublons, cohérence entre les tables (aucun usager ni véhicule rattaché à un accident inexistant) et valeurs manquantes. Les résultats sont enregistrés dans `qualite.parquet` et affichés dans la section 5 du dashboard.
+For each year: duplicates, consistency between tables (no person or vehicle linked to a missing crash) and missing values. The results are saved in `quality.parquet` and shown in section 5 of the dashboard.
 
-**Validation externe** : pour 2024, nos données donnent exactement les chiffres du [bilan officiel de l'ONISR](https://www.onisr.securite-routiere.gouv.fr/etat-de-linsecurite-routiere/bilans-annuels-de-la-securite-routiere/bilan-2024-de-la-securite-routiere) : 3 193 tués en métropole, la répartition par mode de déplacement, 2 465 hommes et 728 femmes, 45 % d'usagers vulnérables.
+**External validation**: for 2024, our data gives exactly the figures of the [ONISR official report](https://www.onisr.securite-routiere.gouv.fr/etat-de-linsecurite-routiere/bilans-annuels-de-la-securite-routiere/bilan-2024-de-la-securite-routiere): 3,193 deaths in metropolitan France, the breakdown by travel mode, 2,465 men and 728 women, 45% vulnerable road users.
 
-### Performance et tests
+### Performance and tests
 
-- Les tables sont stockées au format **Parquet**, avec des colonnes de type `category` (chaque texte répété n'est stocké qu'une fois).
-- Le dashboard ne charge que **les colonnes qu'il utilise** et **la métropole**, une seule fois, avec `st.cache_resource` : un seul exemplaire est partagé par tous les visiteurs, alors que `st.cache_data` en renverrait une copie à chaque clic. Les petites tables (contrôles qualité, contours) utilisent `st.cache_data`.
-- Résultat : **moins de 600 Mo de mémoire** au maximum (contre 1,6 Go dans la première version, qui dépassait la limite de Streamlit Community Cloud), et un changement de filtre en 0,4 à 1,6 seconde.
-- Les chiffres qui ne dépendent pas des filtres (contrôles qualité) sont calculés une fois, lors de la construction des données.
-- Le dashboard a été testé automatiquement (`streamlit.testing`) sur **120 combinaisons de filtres** (départements, modes de déplacement, périodes), sans erreur.
+- Tables are stored as **Parquet** files with `category` columns (each repeated text value is stored once).
+- The dashboard only loads **the columns it uses** and **metropolitan France**, once, with `st.cache_resource`: a single copy is shared by every visitor, whereas `st.cache_data` would return a new copy on each rerun. The small tables (quality checks, boundaries) use `st.cache_data`.
+- Result: **under 600 MB of memory** at peak (against 1.6 GB in the first version, which exceeded the Streamlit Community Cloud limit), and 0.4 to 1.6 seconds per filter change.
+- Figures that do not depend on the filters (quality checks) are computed once, when the data is built.
+- The dashboard was tested automatically (`streamlit.testing`) on **120 filter combinations** (departments, travel modes, periods), with no errors and no empty values in the text.
 
-## Limites
+## Limitations
 
-- **Pas de données d'exposition** : sans le trafic, les distances parcourues ou la population, on compare des nombres et des taux de gravité, pas un risque par kilomètre ou par habitant. Une hausse des cyclistes tués peut venir d'un nombre plus élevé de cyclistes.
-- **Corrélation n'est pas causalité** : un accident de nuit ou sur une route limitée à 80 km/h est plus grave, mais ces données ne disent pas pourquoi.
-- **Accidents non déclarés** : les forces de l'ordre ne sont pas toujours appelées pour les accidents légers ; le nombre de tués est fiable, le nombre d'accidents moins.
-- **Ruptures de méthode** : blessés hospitalisés non comparables avant et après 2018 (avertissement de l'ONISR) ; catégorie « trottinette / EDP » et vitesse autorisée disponibles seulement depuis 2019 ; géolocalisation incomplète avant 2018 (et inexistante en 2009).
-- **Âge à un an près** (seule l'année de naissance est connue) et **conducteurs en fuite** de sexe et d'âge inconnus depuis 2021 (environ 2 % des usagers).
-- **Vie privée** : le dashboard n'affiche que des données agrégées. L'ONISR publie à part, sans lien possible avec les accidents, la marque et le modèle des véhicules.
+- **No exposure data**: without traffic, distances travelled or population, the dashboard compares counts and severity rates, not a risk per kilometre or per inhabitant. A rise in cyclist deaths may come from more cyclists.
+- **Correlation is not causation**: crashes at night or on 80 km/h roads are more severe, but this data does not say why.
+- **Unreported crashes**: the police are not always called for minor crashes; death counts are reliable, crash counts less so.
+- **Method breaks**: hospitalized casualties are not comparable before and after 2018 (ONISR warning); the e-scooter category and the speed limit only exist since 2019; geolocation is incomplete before 2018 (and missing in 2009).
+- **Age accurate to one year** (only the year of birth is known), and **hit-and-run drivers** with unknown sex and age since 2021 (about 2% of people involved).
+- **Privacy**: the dashboard only shows aggregated figures. ONISR publishes vehicle makes and models separately, with no possible link to the crashes.

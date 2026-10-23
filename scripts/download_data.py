@@ -3,86 +3,83 @@ from pathlib import Path
 
 import requests
 
-# Adresse de l'API data.gouv.fr décrivant le jeu de données.
+# data.gouv.fr API page of the dataset
 API_URL = (
     "https://www.data.gouv.fr/api/1/datasets/"
     "bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-"
     "annees-de-2005-a-2024/"
 )
 
-# Années à télécharger : ajouter des années dans cette liste pour en télécharger d'autres.
-ANNEES = list(range(2005, 2025))  # de 2005 à 2024 (la borne de fin est exclue)
+YEARS = list(range(2005, 2025))  # 2005 to 2024
 
-# Dossier de destination : <racine du projet>/data/raw
 RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
 
-# Contours des départements pour la carte (data.gouv.fr « Contours administratifs », licence ODbL),
-CONTOURS_URL = "https://etalab-datasets.geo.data.gouv.fr/contours-administratifs/2025/geojson/departements-1000m.geojson"
-CONTOURS_DESTINATION = Path(__file__).resolve().parents[1] / "data" / "geo" / "departements.geojson"
+# Department boundaries for the map (data.gouv.fr "Contours administratifs", ODbL), simplified to 1,000 m
+GEOJSON_URL = "https://etalab-datasets.geo.data.gouv.fr/contours-administratifs/2025/geojson/departements-1000m.geojson"
+GEOJSON_PATH = Path(__file__).resolve().parents[1] / "data" / "geo" / "departments.geojson"
 
-# Les 4 tables de chaque année, reconnues par le début du titre du fichier.
+# The 4 yearly tables, recognised by the start of the (French) file title.
+# File names are inconsistent across years: caracteristiques_2005, carcteristiques-2021, Caract_2024...
 TABLES = {
-    "car": "caracteristiques",  
-    "lieux": "lieux",
-    "vehicules": "vehicules",
-    "usagers": "usagers",
+    "car": "characteristics",
+    "lieux": "locations",
+    "vehicules": "vehicles",
+    "usagers": "users",
 }
 
 
-# Renvoie (table, année) à partir du titre d'un fichier, ou None s'il ne nous intéresse pas.
-def identifier_fichier(titre):
-    titre = titre.lower()
-    if not titre.endswith(".csv") or "immatricul" in titre:
+# Returns (table, year) for a file title, or None if the file is not needed
+def identify_file(title):
+    title = title.lower()
+    if not title.endswith(".csv") or "immatricul" in title:
         return None
-    annee = re.search(r"20\d{2}", titre)
-    if annee is None:
+    year = re.search(r"20\d{2}", title)
+    if year is None:
         return None
-    for debut, table in TABLES.items():
-        if titre.startswith(debut):
-            return table, int(annee.group())
+    for prefix, table in TABLES.items():
+        if title.startswith(prefix):
+            return table, int(year.group())
     return None
 
 
-# Interroge l'API et renvoie un dictionnaire {(table, année): url}
-def lister_fichiers():
-    reponse = requests.get(API_URL, timeout = 30)
-    reponse.raise_for_status()  # arrête le script si la requête a échoué
-    fichiers = {}
-    for ressource in reponse.json()["resources"]:
-        cle = identifier_fichier(ressource["title"])
-        if cle is not None:
-            fichiers[cle] = ressource["url"]
-    return fichiers
+# Returns {(table, year): url} for every file of the dataset
+def list_files():
+    response = requests.get(API_URL, timeout = 30)
+    response.raise_for_status()
+    files = {}
+    for resource in response.json()["resources"]:
+        key = identify_file(resource["title"])
+        if key is not None:
+            files[key] = resource["url"]
+    return files
 
 
-# Télécharge le fichier situé à `url` et l'enregistre dans `destination`
-def telecharger(url, destination):
-    reponse = requests.get(url, timeout = 120)
-    reponse.raise_for_status()
+def download(url, destination):
+    response = requests.get(url, timeout = 120)
+    response.raise_for_status()
     destination.parent.mkdir(parents = True, exist_ok = True)
-    destination.write_bytes(reponse.content)
+    destination.write_bytes(response.content)
 
 
 def main():
-    fichiers = lister_fichiers()
+    files = list_files()
 
-    for annee in ANNEES:
+    for year in YEARS:
         for table in TABLES.values():
-            url = fichiers[(table, annee)]
-            destination = RAW_DIR / str(annee) / f"{table}.csv"
+            destination = RAW_DIR / str(year) / f"{table}.csv"
             if destination.exists():
-                print("déjà présent :", annee, table)
+                print("already there:", year, table)
             else:
-                print("téléchargement :", annee, table)
-                telecharger(url, destination)
+                print("downloading:", year, table)
+                download(files[(table, year)], destination)
 
-    if CONTOURS_DESTINATION.exists():
-        print("déjà présent : contours des départements")
+    if GEOJSON_PATH.exists():
+        print("already there: department boundaries")
     else:
-        print("téléchargement : contours des départements")
-        telecharger(CONTOURS_URL, CONTOURS_DESTINATION)
+        print("downloading: department boundaries")
+        download(GEOJSON_URL, GEOJSON_PATH)
 
-    print("Terminé.")
+    print("Done.")
 
 
 if __name__ == "__main__":

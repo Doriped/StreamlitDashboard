@@ -1,55 +1,49 @@
 import streamlit as st
 
-from sections import accroche, conclusions, ou, qualite, quand, qui
-from utils.filtres import TOUS_LES_MODES, TOUTE_LA_FRANCE, filtrer
-from utils.io import SOURCE, charger_controles, charger_departements, charger_donnees
+from sections import conclusions, hook, quality, when, where, who
+from utils.filters import ALL_FRANCE, ALL_MODES, apply_filters
+from utils.io import SOURCE, load_checks, load_data, load_departments
 
-st.set_page_config(page_title = "Routes de France", page_icon = "🚗", layout = "wide")
+st.set_page_config(page_title = "Roads of France", layout = "wide")
 
-accidents, personnes = charger_donnees()
-controles = charger_controles()
-contours, noms_departements = charger_departements()
+accidents, people = load_data()
+checks = load_checks()
+geojson, department_names = load_departments()
 
 
-# Texte affiché dans la liste des départements : « 39 – Jura » au lieu de « 39 »
-def nom_complet(code):
-    if code == TOUTE_LA_FRANCE:
+# "39 – Jura" instead of "39" in the department list
+def full_name(code):
+    if code == ALL_FRANCE:
         return code
-    return f"{code} – {noms_departements[code]}"
+    return f"{code} – {department_names[code]}"
 
-# Barre latérale : les filtres, qui s'appliquent à toutes les sections
+
 with st.sidebar:
-    st.header("Filtres")
-    periode = st.slider("Période", min_value = 2005, max_value = 2024, value = (2005, 2024))
+    st.header("Filters")
+    period = st.slider("Period", min_value = 2005, max_value = 2024, value = (2005, 2024))
+    departments = sorted(accidents["dep"].unique())
+    department = st.selectbox("Department", [ALL_FRANCE] + departments, format_func = full_name)
+    modes = sorted(people["mode"].dropna().unique())
+    mode = st.selectbox("Travel mode", [ALL_MODES] + modes)
 
-    departements = sorted(accidents.loc[accidents["zone"] == "Métropole", "dep"].unique())
-    departement = st.selectbox("Département", [TOUTE_LA_FRANCE] + departements, format_func = nom_complet)
+accidents_selected, people_selected = apply_filters(accidents, people, period, department, mode)
 
-    modes = sorted(personnes["mode"].dropna().unique())
-    mode = st.selectbox("Mode de déplacement", [TOUS_LES_MODES] + modes)
-
-accidents_filtres, personnes_filtrees = filtrer(accidents, personnes, periode, departement, mode)
-
-# Pour la carte, il faut tous les départements, même quand un seul est sélectionné
-# (si toute la France est déjà sélectionnée, inutile de refaire le même filtre)
-if departement == TOUTE_LA_FRANCE:
-    accidents_france, personnes_france = accidents_filtres, personnes_filtrees
+# The map needs every department, even when only one is selected
+if department == ALL_FRANCE:
+    accidents_france, people_france = accidents_selected, people_selected
 else:
-    accidents_france, personnes_france = filtrer(accidents, personnes, periode, TOUTE_LA_FRANCE, mode)
+    accidents_france, people_france = apply_filters(accidents, people, period, ALL_FRANCE, mode)
 
-# Titre et source
-st.title("Routes de France : pourquoi la route ne tue pas moins depuis 10 ans")
+st.title("Roads of France: why road deaths have not fallen in 10 years")
 st.caption(SOURCE)
 
-# Si les filtres ne laissent aucun accident, un seul message plutôt qu'un par section
-if len(accidents_filtres) == 0:
-    st.warning("Aucun accident ne correspond aux filtres choisis : élargissez la période, le département ou le mode.")
+if len(accidents_selected) == 0:
+    st.warning("No crashes match the selected filters: widen the period, the department or the travel mode.")
     st.stop()
 
-# L'histoire, section par section
-accroche.afficher(accidents_filtres, personnes_filtrees, periode)
-ou.afficher(accidents_filtres, personnes_filtrees, accidents_france, personnes_france, departement, contours, noms_departements)
-quand.afficher(accidents_filtres, personnes_filtrees)
-qui.afficher(accidents_filtres, personnes_filtrees, periode)
-qualite.afficher(controles)
-conclusions.afficher(accidents_filtres, personnes_filtrees, nom_complet(departement), periode)
+hook.show(accidents_selected, people_selected, period)
+where.show(accidents_selected, people_selected, accidents_france, people_france, department, geojson, department_names)
+when.show(accidents_selected, people_selected)
+who.show(accidents_selected, people_selected, period)
+quality.show(checks)
+conclusions.show(accidents_selected, people_selected, full_name(department), period)
