@@ -2,11 +2,12 @@ import streamlit as st
 
 from sections import accroche, conclusions, ou, qualite, quand, qui
 from utils.filtres import TOUS_LES_MODES, TOUTE_LA_FRANCE, filtrer
-from utils.io import SOURCE, charger_departements, charger_donnees
+from utils.io import SOURCE, charger_controles, charger_departements, charger_donnees
 
 st.set_page_config(page_title = "Routes de France", page_icon = "🚗", layout = "wide")
 
-accidents, personnes, controles = charger_donnees()
+accidents, personnes = charger_donnees()
+controles = charger_controles()
 contours, noms_departements = charger_departements()
 
 

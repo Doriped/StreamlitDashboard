@@ -8,7 +8,7 @@ Après une forte baisse entre 2005 et 2013, la mortalité routière stagne autou
 - **Code source** : [github.com/Doriped/StreamlitDashboard](https://github.com/Doriped/StreamlitDashboard)
 - **Vidéo de démonstration** : *(à compléter)*
 - **Storyboard** : [STORYBOARD.md](STORYBOARD.md)
-- **Auteur** : *(Prénom NOM, groupe)* — EFREI Paris, projet individuel de Data Visualization 2026
+- **Auteur** : *Anguille Dorian* — EFREI Paris, projet individuel de Data Visualization 2026
 
 ## Le projet en bref
 
@@ -114,7 +114,9 @@ Pour chaque année : doublons, cohérence entre les tables (aucun usager ni véh
 
 ### Performance et tests
 
-- Les données sont chargées une seule fois grâce à `st.cache_data`, et stockées au format **Parquet** avec des colonnes de type `category` : 208 Mo en mémoire au lieu de 860 Mo, et un changement de filtre en 0,4 à 1,6 seconde.
+- Les tables sont stockées au format **Parquet**, avec des colonnes de type `category` (chaque texte répété n'est stocké qu'une fois).
+- Le dashboard ne charge que **les colonnes qu'il utilise** et **la métropole**, une seule fois, avec `st.cache_resource` : un seul exemplaire est partagé par tous les visiteurs, alors que `st.cache_data` en renverrait une copie à chaque clic. Les petites tables (contrôles qualité, contours) utilisent `st.cache_data`.
+- Résultat : **moins de 600 Mo de mémoire** au maximum (contre 1,6 Go dans la première version, qui dépassait la limite de Streamlit Community Cloud), et un changement de filtre en 0,4 à 1,6 seconde.
 - Les chiffres qui ne dépendent pas des filtres (contrôles qualité) sont calculés une fois, lors de la construction des données.
 - Le dashboard a été testé automatiquement (`streamlit.testing`) sur **120 combinaisons de filtres** (départements, modes de déplacement, périodes), sans erreur.
 

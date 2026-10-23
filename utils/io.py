@@ -18,14 +18,29 @@ SOURCE = (
 )
 
 
-# Lit les 3 tables propres. Grâce à @st.cache_data, les fichiers ne sont lus qu'une seule fois :
-# les fois suivantes, Streamlit renvoie directement le résultat gardé en mémoire
-@st.cache_data(show_spinner = "Chargement des données…")
+# Seules les colonnes utilisées par le dashboard sont chargées : moins de mémoire, et des filtres plus rapides
+COLONNES_ACCIDENTS = ["num_acc", "annee", "jour_semaine", "heure", "dep", "zone", "agglomeration", "lumiere", "type_route"]
+COLONNES_PERSONNES = ["num_acc", "annee", "dep", "zone", "agglomeration", "type_route", "gravite", "mode", "sexe", "age"]
+
+# Le dashboard ne montre que la France métropolitaine : l'outre-mer n'est pas chargé
+METROPOLE = [("zone", "==", "Métropole")]
+
+
+# Lit les deux grandes tables, une seule fois. @st.cache_resource garde en mémoire un seul exemplaire,
+# partagé par toutes les exécutions et tous les visiteurs. (@st.cache_data, lui, renverrait une copie
+# à chaque clic : avec des tables de cette taille, la mémoire du serveur serait vite dépassée.)
+# Ces tables ne sont jamais modifiées par le dashboard : chaque filtre crée une nouvelle table.
+@st.cache_resource(show_spinner = "Chargement des données…")
 def charger_donnees():
-    accidents = pd.read_parquet(PROCESSED_DIR / "accidents.parquet")
-    personnes = pd.read_parquet(PROCESSED_DIR / "personnes.parquet")
-    qualite = pd.read_parquet(PROCESSED_DIR / "qualite.parquet")
-    return accidents, personnes, qualite
+    accidents = pd.read_parquet(PROCESSED_DIR / "accidents.parquet", columns = COLONNES_ACCIDENTS, filters = METROPOLE)
+    personnes = pd.read_parquet(PROCESSED_DIR / "personnes.parquet", columns = COLONNES_PERSONNES, filters = METROPOLE)
+    return accidents, personnes
+
+
+# Lit la petite table des contrôles qualité (une ligne par année)
+@st.cache_data
+def charger_controles():
+    return pd.read_parquet(PROCESSED_DIR / "qualite.parquet")
 
 
 # Lit les contours des départements (pour la carte) et renvoie aussi le nom de chaque département
