@@ -6,7 +6,7 @@ After a sharp fall between 2005 and 2013, road deaths in metropolitan France hav
 
 - **Live app**: [routes-de-france.streamlit.app](https://routes-de-france.streamlit.app/)
 - **Source code**: [github.com/Doriped/StreamlitDashboard](https://github.com/Doriped/StreamlitDashboard)
-- **Demo video**: *(to be added)*
+- **Demo video**: [youtu.be/L9FJcrgfblw](https://youtu.be/L9FJcrgfblw)
 - **Storyboard**: [STORYBOARD.md](STORYBOARD.md)
 - **Author**: *Anguille Dorian* — EFREI Paris, individual Data Visualization project 2026
 
